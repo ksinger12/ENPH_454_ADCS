@@ -4,31 +4,26 @@
 // https://www.youtube.com/watch?v=vqV6nazapFQ
 // Final Copy Nov 22, 2020 @ 8:45pm
 
-// My reaction wheel was inspired by the Cubli and ReM-RC's YouTube 
-channel
+// My reaction wheel was inspired by the Cubli and ReM-RC's YouTube channel
 // https://www.youtube.com/watch?v=n_6p-1J551Y
 // https://www.youtube.com/watch?v=wFZl9MwwkB8
 
-// An excellent resource for learning about IMU's and PIDS for the 
-Arduino platform. It consist of 26 lessons created by Paul McWhorter.
+// An excellent resource for learning about IMU's and PIDS for the Arduino platform. It consist of 26 lessons created by Paul McWhorter.
 // https://www.youtube.com/watch?v=2AO_Gmh5K3Q
 
-// I derived and modified existing code from multiple sources of balance 
-robots and other resources listed on YouTube
+// I derived and modified existing code from multiple sources of balance robots and other resources listed on YouTube
 
 // MAKE Sure These Libraries are Installed
 #include <MsTimer2.h>       // Internal Timer2 for ISR Routine
 #include <PinChangeInt.h>  // Create external interrupts
 #include <MPU6050.h>      // MPU6050 library
 #include <Wire.h>        // IIC communication library
-#include <PWM.h>        // Require Timer1 PWM frequency of 20Khz-25Khz 
-for Nidec 24H677 BLDC Motor
+#include <PWM.h>        // Require Timer1 PWM frequency of 20Khz-25Khz for Nidec 24H677 BLDC Motor
 
 //$$$$$$$$$$$$$$$$$$$ MPU 6050 
 $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
 MPU6050 mpu6050;     // MPU6050 name mpu6050 
-int16_t accX, accY, accZ, gyroX, gyroY, gyroZ; // 6DOF 3-axis 
-acceleration and 3-axis gyroscope variables
+int16_t accX, accY, accZ, gyroX, gyroY, gyroZ; // 6DOF 3-axis acceleration and 3-axis gyroscope variables
 //$$$$$$$$$$$$$$$$$$$ MPU 6050 
 $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
 
@@ -138,10 +133,8 @@ void setup()
   pinMode(nidecPWM,OUTPUT);
   pinMode(nidecBrake, OUTPUT);
   pinMode(nidecHalleffect, INPUT);  //speed encoder input
-  pinMode(13, OUTPUT);  //D13 LED use scope to measure ISR routine to 
-make sure interrupt is working
-  // sample rate or (dt) = (1/100Hz) /2) = 5ms = 0.005s // You have to 
-remove the for/nextloop for the LED blink routine
+  pinMode(13, OUTPUT);  //D13 LED use scope to measure ISR routine to make sure interrupt is working
+  // sample rate or (dt) = (1/100Hz) /2) = 5ms = 0.005s // You have to remove the for/nextloop for the LED blink routine
 
   // Output initial state values
   digitalWrite(nidecDirection,LOW);
@@ -185,14 +178,12 @@ void countpulse()
 
   pulseCount = rw;    
 
-  if (pwmOut < 0)   //  Reaction wheel turning counter clockwise than 
-pulse is a negative number.
+  if (pwmOut < 0)   //  Reaction wheel turning counter clockwise than pulse is a negative number.
   {
 
     pulseCount = -pulseCount;
   }
-  else if (pwmOut > 0)    //Reaction wheel turning clockwise than pulse 
-is a positive number.
+  else if (pwmOut > 0)    //Reaction wheel turning clockwise than pulse is a positive number.
   {
     pulseCount = pulseCount;
   }
@@ -210,8 +201,7 @@ void ISR_Routine()
 ENCODER?
   mpu6050.getMotion6(&accX, &accY, &accZ, &gyroX, &gyroY, &gyroZ);     
 //IIC to get MPU6050 six-axis data  ax ay az gx gy gz
-  angle_calculate(accX, accY, accZ, gyroX, gyroY, gyroZ, dt, Q_angle, 
-Q_gyro, R_angle, C_0, K1);      //get angle and Kalmam filtering
+  angle_calculate(accX, accY, accZ, gyroX, gyroY, gyroZ, dt, Q_angle, Q_gyro, R_angle, C_0, K1);      //get angle and Kalmam filtering
   PD();         //angle loop PD control
   ReactionWheelPWM();
 
@@ -222,8 +212,7 @@ Q_gyro, R_angle, C_0, K1);      //get angle and Kalmam filtering
     cc=0;  //Clear
   }
   // The onboard LED / D13 blinks every second
-  // To measure the 100Hz ie 5ms ISR routine put the digitalWrite 
-statement out side of the loopcount
+  // To measure the 100Hz ie 5ms ISR routine put the digitalWrite statement out side of the loopcount
   // and put an oscilloscope probe on to pin D13
  
   loopcount++;
@@ -244,12 +233,8 @@ void angle_calculate(int16_t accX,int16_t accY,int16_t accZ,int16_t
 gyroX,int16_t gyroY,int16_t gyyroZ,float dt,float Q_angle,float 
 Q_gyro,float R_angle,float C_0,float K1)
 {
-  float Angle = -atan2(accY , accZ) * (180/ PI);           //Radial 
-rotation angle calculation formula ; negative sign is direction 
-processing
-  Gyro_x = -gyroX / 131;              //The X-axis angular velocity 
-calculated by the gyroscope;  the negative sign is the direction 
-processing
+  float Angle = -atan2(accY , accZ) * (180/ PI);           //Radial rotation angle calculation formula ; negative sign is direction processing
+  Gyro_x = -gyroX / 131;              //The X-axis angular velocity calculated by the gyroscope;  the negative sign is the direction processing
   Kalman_Filter(Angle, Gyro_x);            //Kalman Filter
   //rotating angle Z-axis parameter
   Gyro_z = -gyroZ / 131;                      //angle speed of Z-axis
@@ -339,20 +324,15 @@ saturation
 /////////////////////////////
 void ReactionWheelPWM()
 {
-  pwmOut=-PD_pwm; - PI_pwm;           //assign the end value of PWM to 
-motor
+  pwmOut=-PD_pwm; - PI_pwm;           //assign the end value of PWM to motor
   pwmOut = constrain(pwmOut, -255, 255);
-  // Nidec motor PWM - 5% Duty Cycle = High Speed and 90% Duty Cycle = 
-Low Speed
-  //  This is oppisite of a standard DC motor therefore we have to map 
-different values for pwmOut2
-  pwmOut2 = map(pwmOut, -255, 255, -180, 130);//-130, 130 // modify the 
-last two values for your BLDC motor
+  // Nidec motor PWM - 5% Duty Cycle = High Speed and 90% Duty Cycle = Low Speed
+  //  This is oppisite of a standard DC motor therefore we have to map different values for pwmOut2
+  pwmOut2 = map(pwmOut, -255, 255, -180, 130);//-130, 130 // modify the last two values for your BLDC motor
  //Serial.println(pwmOut);
 
   
-  if (angle >= 25 && loopOnce == 1) // Reaction Wheel Right Side Jump-up 
-Position 
+  if (angle >= 25 && loopOnce == 1) // Reaction Wheel Right Side Jump-up Position 
    {
     for (int i = 0; i <= 10; i++) // A blinky delay 
      {
@@ -372,10 +352,8 @@ Position
     loopOnce = 0;
    } 
 
-   if(angle <= -25 && loopOnce == 0) { // Reaction Wheel Left Side 
-before moving to jump-up position
-     for (int i = 0; i <= 20; i++) // Blinky countdown timer before 
-reaction wheel spins
+   if(angle <= -25 && loopOnce == 0) { // Reaction Wheel Left Side before moving to jump-up position
+     for (int i = 0; i <= 20; i++) // Blinky countdown timer before reaction wheel spins
      {
      delay(50);
      digitalWrite(ledsDirection,HIGH);  // Red LED ON
@@ -386,16 +364,14 @@ reaction wheel spins
      }
   
  
-  if(angle >= 20 || angle <= -20)  // if angle is greater than +/- 20° 
-than the Nidec motor will stop
+  if(angle >= 20 || angle <= -20)  // if angle is greater than +/- 20° than the Nidec motor will stop
       {                                      
       digitalWrite(nidecBrake,LOW);  // Nidec motor brake ON
       analogWrite(nidecPWM, 0);
       }
       else
       {
-          if(pwmOut>=0)         // Reaction wheel leaning to the left 
-from center
+          if(pwmOut>=0)         // Reaction wheel leaning to the left from center
           {
           digitalWrite(nidecBrake,HIGH);    // Nidec motor brake OFF 
           digitalWrite(nidecDirection,LOW); // Nidec Direction CW
