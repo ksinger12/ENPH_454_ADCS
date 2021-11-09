@@ -34,7 +34,7 @@ const int ledsDirection = 6; // Green/Red LED direction indicators
 const int nidecPWM = 9;     // Nidec Motor PWM
 float loopOnce=0; // Used to reset Nidec jump-up routine
 //************** End of Nidec 24H677H010 BLDC Motor Vars 
-****************
+
 
 //@@@@@@@@@@@@@@@@@@@@@@@ Begin of Angle Vars @@@@@@@@@@@@@@@@@@@@@@@@@@
 float angle0 = -5; //mechanical balance angle (ideally 0 degrees) 
@@ -123,8 +123,7 @@ void setup()
 
   // PWM.h Setup
   InitTimersSafe();
-  // The Nidec 24H677 BLDC Motor requires a PWM frequency of 20KHz to 
-25KHz
+  // The Nidec 24H677 BLDC Motor requires a PWM frequency of 20KHz to 25KHz
   bool success = SetPinFrequencySafe(nidecPWM, 20000);
     
   //set the Nidec motor control pins
@@ -240,8 +239,7 @@ Q_gyro,float R_angle,float C_0,float K1)
   Gyro_z = -gyroZ / 131;                      //angle speed of Z-axis
   //accelz = accZ / 1604;
 
-  float angleAx = -atan2(accX, accZ) * (180 / PI); //calculate the 
-inclined angle with x-axis
+  float angleAx = -atan2(accX, accZ) * (180 / PI); //calculate the inclined angle with x-axis
   Gyro_y = -gyroY / 131.00; //angle speed of Y-axis
   Yiorderfilter(angleAx, Gyro_y); //first-order filtering
 }
@@ -305,7 +303,7 @@ control
 
 ////////////////// Begin of Speed PI_pwm ////////////////////
 void SpeedPIout()
-{
+{ 
   float speeds = (rwPulse) * 1.0;      //speed  pulse value
   rwPulse = 0;
   speeds_filterold *= 0.7;         //first-order complementary filtering
@@ -350,40 +348,40 @@ void ReactionWheelPWM()
     pwmOut2 = 0;
     delay(125);
     loopOnce = 0;
-   } 
+  } 
 
-   if(angle <= -25 && loopOnce == 0) { // Reaction Wheel Left Side before moving to jump-up position
-     for (int i = 0; i <= 20; i++) // Blinky countdown timer before reaction wheel spins
-     {
-     delay(50);
-     digitalWrite(ledsDirection,HIGH);  // Red LED ON
-     delay(50);
-     digitalWrite(ledsDirection,LOW);  // Green LED ON
-     }
-     loopOnce = 1;
-     }
+  if(angle <= -25 && loopOnce == 0) { // Reaction Wheel Left Side before moving to jump-up position
+    for (int i = 0; i <= 20; i++) // Blinky countdown timer before reaction wheel spins
+    {
+    delay(50);
+    digitalWrite(ledsDirection,HIGH);  // Red LED ON
+    delay(50);
+    digitalWrite(ledsDirection,LOW);  // Green LED ON
+    }
+    loopOnce = 1;
+  }
   
  
   if(angle >= 20 || angle <= -20)  // if angle is greater than +/- 20° than the Nidec motor will stop
-      {                                      
-      digitalWrite(nidecBrake,LOW);  // Nidec motor brake ON
-      analogWrite(nidecPWM, 0);
-      }
-      else
-      {
-          if(pwmOut>=0)         // Reaction wheel leaning to the left from center
-          {
-          digitalWrite(nidecBrake,HIGH);    // Nidec motor brake OFF 
-          digitalWrite(nidecDirection,LOW); // Nidec Direction CW
-          digitalWrite(ledsDirection,LOW);  // Green LED ON
-          analogWrite(nidecPWM,pwmOut2);        // Nidec PWM speed 
-          }
-          else // Reaction wheel leaning to the right from center
-          {
-          digitalWrite(nidecBrake,HIGH);     // Nidec motor brake OFF 
-          digitalWrite(nidecDirection,HIGH); // Nidec Direction CCW
-          digitalWrite(ledsDirection,HIGH);  // Red LED ON
-          analogWrite(nidecPWM, -pwmOut2);       // Nidec PWM speed  
-          }
-       } 
+  {                                      
+    digitalWrite(nidecBrake,LOW);  // Nidec motor brake ON
+    analogWrite(nidecPWM, 0);
+  }
+  else
+  {
+    if(pwmOut>=0)         // Reaction wheel leaning to the left from center
+    {
+      digitalWrite(nidecBrake,HIGH);    // Nidec motor brake OFF 
+      digitalWrite(nidecDirection,LOW); // Nidec Direction CW
+      digitalWrite(ledsDirection,LOW);  // Green LED ON
+      analogWrite(nidecPWM,pwmOut2);        // Nidec PWM speed 
+    }
+    else // Reaction wheel leaning to the right from center
+    {
+      digitalWrite(nidecBrake,HIGH);     // Nidec motor brake OFF 
+      digitalWrite(nidecDirection,HIGH); // Nidec Direction CCW
+      digitalWrite(ledsDirection,HIGH);  // Red LED ON
+      analogWrite(nidecPWM, -pwmOut2);       // Nidec PWM speed  
+    }
+  } 
 }

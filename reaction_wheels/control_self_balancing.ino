@@ -15,6 +15,7 @@ int16_t accX, accY, accZ, gyroX, gyroY, gyroZ; // 6DOF 3-axis acceleration and 3
 //************** Maxon motor vars ****************
 int enable_pin = 24; //digital input 4: enable
 int set_value_pin = 7; //digital input 1: set speed 
+int speed_pin = A1; //analog input A1: read averaged speed
 //************************************************
 
 //@@@@@@@@@@@@@@@@@@@@@@@ Begin of Angle Vars @@@@@@@@@@@@@@@@@@@@@@@@@@
@@ -59,14 +60,12 @@ float pwmOut2=0;
 ///////////////////////////////// End of PID speed loop Vars 
 
 ////////////////// Begin of ISR speed count vars
-#define nidecHalleffect 12  // External interrupt D12 for Nidec FG output 6 Pulses/Revoltion
-volatile long countHall = 0;// Used to calculate the pulse value calculated by the Hall encoder 
+//#define nidecHalleffect 12  // External interrupt D12 for Nidec FG output 6 Pulses/Revoltion
+//volatile long countHall = 0;// Used to calculate the pulse value calculated by the Hall encoder 
 ////////////////// End of ISR speed count vars
 
 ////////////////////// Begin of pulse count /////////////////////////
-int rw = 0;
-int pulseCount = 0;
-int rwPulse;
+float avgSpeed;
 ////////////////////// End of pulse count //////////////////////////
 
 //////////////////////////////// Begin of PI_pwm Vars 
@@ -82,6 +81,7 @@ void setup()
     //set maxon motor control pins
     pinMode(enable_pin, OUTPUT);
     pinMode(set_value_pin, OUTPUT);
+    pinMode(speed_pin, INPUT);
 
     //initial state values
     digitalWrite(enable_pin, HIGH);
@@ -99,32 +99,26 @@ void setup()
 
 }
 
+
 void loop() 
 {
-    //I don't understand what this is, attachPinChangeInterrupt is never defined
     //external interrupt; used to calculate the reaction wheel's speed
-    attachPinChangeInterrupt(nidecHalleffect, Code_Hall, CHANGE);  
+    //attachPinChangeInterrupt(nidecHalleffect, Code_Hall, CHANGE);  
 }
 
-///////////////////// Hall Effect count /////////////////////////
-// encoder count
-void Code_Hall() 
-{
-  countHall ++; //increment hall pulse count
-} 
 
 //////////////////// Hall Effect Pulse count ///////////////////////
-void countpulse()
+void getHallSpeed()
 {
-    //get count from hall sensor (TODO)
-
+    //get count from hall sensor
+    avgSpeed = analogRead(speed_pin)
 }
 
 ///////////////////////////////// Begin of ISR_Routine 
 void ISR_Routine()
 {
-    sei();  //allow overall interrupt 
-    countpulse(); //get hall sensor count in rwPulse
+    sei();  //allow overall interrupt (I think this lets ISR_Routine act as an interrupt?)
+    getHallSpeed(); //get speed of motor using hall sensor reading
 
     mpu6050.getMotion6(&accX, &accY, &accZ, &gyroX, &gyroY, &gyroZ);     
     //IIC to get MPU6050 six-axis data  ax ay az gx gy gz
@@ -148,14 +142,14 @@ void angle_calculate(int16_t accX,int16_t accY,int16_t accZ,int16_t
     Q_gyro,float R_angle,float C_0,float K1)
 {
     float Angle = -atan2(accY , accZ) * (180/ PI);           //Radial rotation angle calculation formula ; negative sign is direction processing
-    Gyro_x = -gyroX / 131;              //The X-axis angular velocity calculated by the gyroscope;  the negative sign is the direction processing
+    float r = 131.0; //radial distance of accelerometer to fixed point
+    Gyro_x = -gyroX / r;              //The X-axis angular velocity calculated by the gyroscope;  the negative sign is the direction processing
     Kalman_Filter(Angle, Gyro_x);            //Kalman Filter
     //rotating angle Z-axis parameter
-    Gyro_z = -gyroZ / 131;                      //angle speed of Z-axis
-    //accelz = accZ / 1604;
+    Gyro_z = -gyroZ / r;                      //angle speed of Z-axis
 
     float angleAx = -atan2(accX, accZ) * (180 / PI); //calculate the inclined angle with x-axis
-    Gyro_y = -gyroY / 131.00; //angle speed of Y-axis
+    Gyro_y = -gyroY / r; //angle speed of Y-axis
     Yiorderfilter(angleAx, Gyro_y); //first-order filtering
 }
 
@@ -214,8 +208,7 @@ void PD()
 ////////////////// Begin of Speed PI_pwm ////////////////////
 void SpeedPIout()
 {
-  float speeds = (rwPulse) * 1.0;      //motor speed (from countpulse())
-  rwPulse = 0;
+  float speeds = avgSpeed;      //motor speed (from getHallSpeed())
   speeds_filterold *= 0.7;         //first-order complementary filtering
   speeds_filter = speeds_filterold + speeds * 0.3;
   speeds_filterold = speeds_filter;
@@ -231,16 +224,19 @@ void ReactionWheelPWM()
     pwmOut=-PD_pwm; - PI_pwm;           //assign the end value of PWM to motor
     pwmOut = constrain(pwmOut, -255, 255);
 
-    pwmOut2 = map(pwmOut, -255, 255, -180, 130); //TODO modify last 2 values for maxon motor
+    //Old code: pwmOut2 = map(pwmOut, -255, 255, 26, 230);
+    //The idea is the nidec motor had 5% = High Speed and 90% = Low Speed
+    //That's the opposite of what's typical, so he had weird mapping
+    pwmOut2 = map(pwmOut, -255, 255, 26, 230); //[10%, 90%] of PWM range
 
     //if too far right, PWM to go CW, PWM to go CCW
     if (angle >= 25 && loopOnce == 1) // Reaction Wheel Right Side Jump-up Position 
     {
         //delay before actuating motor
+        delay(4000); //comes from LED delays
+        analogWrite(set_value_pin,185); //strong signal to go CW
         delay(4000);
-        analogWrite(set_value_pin,185);
-        delay(4000);
-        analogWrite(set_value_pin,10);
+        analogWrite(set_value_pin,10); //weak signal to go CCW (to deal with overshoot)
         pwmOut2 = 0;
         delay(125);
         loopOnce = 0;
@@ -249,22 +245,28 @@ void ReactionWheelPWM()
     //if too far left, delay and run "too far right" code???
     if(angle <= -25 && loopOnce == 0) { // Reaction Wheel Left Side before moving to jump-up position
         //delay before actuating
-        delay(2000);
+        delay(2000); //countdown before wheel spins
         loopOnce = 1;
     }
 
-    if(angle >= 20 || angle <= -20)  // if angle is greater than +/- 20° motor will stop
-        {                                      
-            analogWrite(set_value_pin, 0);
-        }
-        else
+    // if angle is greater than +/- 20° motor will stop
+    if(angle >= 20 || angle <= -20)  
+    {                                      
+        analogWrite(set_value_pin, 0); //but this only works for him since his motor has a brake
+    }
+    else
+    {
+        /*
+        if(pwmOut>=0)         // Reaction wheel leaning to the left from center, so go CW
         {
-            if(pwmOut>=0)         // Reaction wheel leaning to the left from center, so go CW
-            {
-                analogWrite(set_value_pin, pwmOut2);       
-            }
-            else // Reaction wheel leaning to the right from center, so go CCW
-            {
-                analogWrite(set_value_pin, -pwmOut2);  
-            }
-      } 
+            analogWrite(set_value_pin, pwmOut2);       
+        }
+        else // Reaction wheel leaning to the right from center, so go CCW
+        {
+            analogWrite(set_value_pin, pwmOut2);  
+        }
+        */
+        //Above is Same as: (unless sign is wrong)
+        analogWrite(set_value_pin, pwmOut2);   
+    } 
+}
