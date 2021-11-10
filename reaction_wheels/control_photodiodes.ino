@@ -3,6 +3,10 @@
 #include <PinChangeInt.h>  // Create external interrupts
 #include <Wire.h>        // IIC communication library
 
+//$$$$$$$$$$$$$$$$$$$ MPU 6050 
+MPU6050 mpu6050;     // MPU6050 name mpu6050 
+int16_t accX, accY, accZ, gyroX, gyroY, gyroZ; // 6DOF 3-axis acceleration and 3-axis gyroscope variables
+//$$$$$$$$$$$$$$$$$$$ MPU 6050 
 
 //************** Maxon motor vars ****************
 int enable_pin = 24; //digital input 4: enable
@@ -10,19 +14,13 @@ int set_value_pin = 7; //digital input 1: set speed
 int speed_pin = A1; //analog input A1: read averaged speed
 //************************************************
 
-//@@@@@@@@@@@@@@@@@@@@@@@ Begin of Angle Vars @@@@@@@@@@@@@@@@@@@@@@@@@@
-float angle0 = -5; //mechanical balance angle (ideally 0 degrees) 
-float Gyro_x;
-float Gyro_y;
-float Gyro_z;  //Angular velocity by gyroscope calculation
-//@@@@@@@@@@@@@@@@@@@@@@@@ End of Angle Vars @@@@@@@@@@@@@@@@@@@@@@@@@@@
 
 //######################## Begin of Kalman Filter Vars 
 float Q_angle = 0.001;    // Covariance of gyroscope noise    
 float Q_gyro = 0.003;    // Covariance of gyroscope drift noise
 float R_angle = 0.5;    // Covariance of accelerometer
 char C_0 = 1;
-float dt = 0.005; // The value of dt is the filter sampling time
+float dt = 0.005; // The value of dt is the filter sampling time (5ms)
 float K1 = 0.05; // a function containing the Kalman gain is used to calculate the deviation of the optimal estimate
 float K_0,K_1,t_0,t_1;
 float angle_err;
@@ -36,8 +34,8 @@ float  PCt_0, PCt_1, E;
 //########################### End of Kalman Filter Vars 
 
 ////////////////////// Begin of PID parameters 
+//may need to be tuned for our system
 double kp = 28;
-double ki = 0; // NOT USED
 double kd = 0.62; 
 ////////////////////// End of PID parameters 
 
@@ -57,7 +55,7 @@ float avgSpeed;
 ////////////////////// End of pulse count //////////////////////////
 
 //////////////////////////////// Begin of PI_pwm Vars 
-float speeds_filterold=0;
+float speeds_filter_old=0;
 float positions=0;
 double PI_pwm;
 int cc;
@@ -74,6 +72,12 @@ void setup()
     //initial state values
     digitalWrite(enable_pin, HIGH);
 
+    // join I2C bus
+    Wire.begin();                            
+    delay(500);
+    mpu6050.initialize(); //initialize MPU6050
+    delay(500);
+    Serial.begin(9600);
 
     //timer for ISR routine
     MsTimer2::set(5, ISR_Routine);
@@ -88,22 +92,25 @@ void loop()
 //////////////////// Hall Effect Pulse count ///////////////////////
 void getHallSpeed()
 {
-    //get count from hall sensor
+    //get count from hall sensor (read analog pin)
     avgSpeed = analogRead(speed_pin)
 }
 
 ///////////////////////////////// Begin of ISR_Routine 
 void ISR_Routine()
 {
+    //This is the main loop of the code (runs repeatedly due to MsTimer)
+
     sei();  //allow overall interrupt 
     getHallSpeed(); //get hall sensor count in rwPulse
 
+    mpu6050.getMotion6(&accX, &accY, &accZ, &gyroX, &gyroY, &gyroZ);   
     //Get relative angle to light source (TODO: get code from elec team)
-    angle_calculate();
+    angle_calculate(gyroX);
     PD();         //angle loop PD control
     ReactionWheelPWM(); //actuate motor
 
-    //run PI algorithm every 8th loop
+    //run PI algorithm every 8th loop to update PI_pwm
     cc++;
     if(cc>=8)     //5*8=40，enter PI algorithm of speed per 40ms
     {
@@ -113,17 +120,39 @@ void ISR_Routine()
 ////////////////////////// End of ISR_Routine 
 
 ///////////////////////////// Tilt calculations ///////////////////////
-void angle_calculate()
+void angle_calculate(gyroX)
 {
-    //to be provided by elec team
+    //to be provided by elec team (Angle)
+
+    //The X-axis angular velocity calculated by the gyroscope;  the negative sign is the direction processing
+    float r = //TODO: add radial length from rotational centre to accelerometer 
+    Gyro_x = -gyroX / r;              
+    
+    //Kalman_Filter would be used here, taking angle_m from elec team, gyro_m from gyroscope
+    Kalman_Filter(Angle, Gyro_x);          
 }
 
 
 /////////////////////////////// Kalman Filter Calculations 
+//This was used as part of the code to determine the desired angle change for the self-
+//balancing wheel, we could use this in a similar way where prior measured
+//values are used for the Kalman filter (kalman gain, etc)
+
+//Basically this lets us improve our estimates of the desired angle change by considering
+//previously measured values and their errors. 
 void Kalman_Filter(double angle_m, double gyro_m)
 {
-  angle += (gyro_m - q_bias) * dt;          //prior estimate
-  angle_err = angle_m - angle;
+  //Why kalman filter the measured desired angle change and the measured angular speed?
+  //Because 
+
+  //Params:
+  //    angle_m: Measured desired angle change
+  //    gyro_m: Measured system speed with accelerometer
+  //updates:
+  //    angle_speed (angular speed)
+  //    angle (angular displacement relative to desired position)
+  angle += gyro_m * dt;          //prior estimate
+  angle_err = angle_m - angle; //how does this work?
   
   Pdot[0] = Q_angle - P[0][1] - P[1][0];    //The differential of the covariance of the prior estimate error
   Pdot[1] = - P[1][1];
@@ -158,35 +187,41 @@ void Kalman_Filter(double angle_m, double gyro_m)
 }
 ////////////////////////////////////////////////////////////////
 
-///////////////////// First-order filter /////////////////
-void Yiorderfilter(float angle_m, float gyro_m)
-{
-  angleY_one = K1 * angle_m + (1 - K1) * (angleY_one + gyro_m * dt);
-}
-
 ////////////////// Angle PD_pwm ////////////////////
 void PD()
 {
-  PD_pwm = kp * (angle + angle0) + kd * angle_speed; //PD angle loop control
+  //PD angle loop control
+  //depends on angle (current angular orientation) and current angular speed
+  PD_pwm = kp * angle + kd * angle_speed; 
 }
 
 ////////////////// Begin of Speed PI_pwm ////////////////////
+//Updates PI_pwm (PWM signal from PI part of control algorithm)
 void SpeedPIout()
 {
+  //PI control 
+  //Basically update PI_pwm to be 0.7*last hall sensor speed + 0.3*current hall sensor speed
+
   float speeds = (rwPulse) * 1.0;      //motor speed (from countpulse())
-  rwPulse = 0;
-  speeds_filterold *= 0.7;         //first-order complementary filtering
-  speeds_filter = speeds_filterold + speeds * 0.3;
-  speeds_filterold = speeds_filter;
+  rwPulse = 0;      
+  speeds_filter = speeds_filter_old * 0.7 + speeds * 0.3;
+  speeds_filter_old = speeds_filter;
   positions += speeds_filter;
   positions = constrain(positions, -3550,3550);    //Anti-integral saturation
-  PI_pwm = ki_speed * (targetAngle - positions) + kp_speed * (targetAngle - speeds_filter); //speed loop control PI
+  PI_pwm = ki_speed * (targetAngle - positions) + kp_speed * (targetAngle - speeds_filter);
 }
 ////////////////////////////////////////////////////////////////
 
 //////////////////////////// Final PWM Values 
+//I don't understand how this really works, comes from reference code.
+//The motor used in the reference code has a brake (that can reduce the 
+//angular speed to 0 very quickly). We don't have a brake, so we may not be able to 
+//use this code.  
 void ReactionWheelPWM()
 {
+    //Combine the PD and PI parts of the PWM signals into one for actuating
+
+    //TODO: Replace the actuating code
     pwmOut=-PD_pwm; - PI_pwm;           //assign the end value of PWM to motor
     pwmOut = constrain(pwmOut, -255, 255);
 
