@@ -223,42 +223,37 @@ void ReactionWheelPWM()
 
     //TODO: Replace the actuating code
     pwmOut=-PD_pwm; - PI_pwm;           //assign the end value of PWM to motor
-    pwmOut = constrain(pwmOut, -255, 255);
+    pwmOut = constrain(pwmOut, -255, 255); //constrain to valid PWM range
 
     pwmOut2 = map(pwmOut, -255, 255, -180, 130); //TODO modify last 2 values for maxon motor
 
-    //if too far right, PWM to go CW, PWM to go CCW
-    if (angle >= 25 && loopOnce == 1) // Reaction Wheel Right Side Jump-up Position 
+    //if too far right
+    if (angle >= 25)
     {
-        //delay before actuating motor
+        //delay before actuating motor, strong CW signal, delay, weak CCW signal
         delay(4000);
         analogWrite(set_value_pin,185);
+        delay(4000);
+        analogWrite(set_value_pin,-10);
+        pwmOut2 = 0;
+        delay(125);
+    } 
+
+    //if too far left
+    if(angle <= -25) { 
+        //delay before actuating motor, strong CW signal, delay, weak CCW signal
+        delay(4000);
+        analogWrite(set_value_pin,-185);
         delay(4000);
         analogWrite(set_value_pin,10);
         pwmOut2 = 0;
         delay(125);
-        loopOnce = 0;
-    } 
-
-    //if too far left, delay and run "too far right" code???
-    if(angle <= -25 && loopOnce == 0) { // Reaction Wheel Left Side before moving to jump-up position
-        //delay before actuating
-        delay(2000);
-        loopOnce = 1;
     }
 
-    if(angle >= 20 || angle <= -20)  // if angle is greater than +/- 20° motor will stop
+    //small difference from desired angle
+    if(angle >= 20 || angle <= -20) 
         {                                      
-            analogWrite(set_value_pin, 0);
+            //actuate PWM signal from PID in correct direction
+            
         }
-        else
-        {
-            if(pwmOut>=0)         // Reaction wheel leaning to the left from center, so go CW
-            {
-                analogWrite(set_value_pin, pwmOut2);       
-            }
-            else // Reaction wheel leaning to the right from center, so go CCW
-            {
-                analogWrite(set_value_pin, -pwmOut2);  
-            }
       } 
