@@ -67,6 +67,11 @@ float LightVectorDetermination::get_global_angle(double * voltages) {
   return result;
 }
 
+void LightVectorDetermination::set_params(double m, double b, double max_v) {
+  for (int i = 0; i < n_photodiode; i++)
+    light_models[i].set_params(m, b, max_v);
+}
+
 void LightVectorDetermination::read_photodiode_array(double * voltages) {
   /* Populates a 1D voltage array with photodiode array data */
   for (int i = 0; i < n_photodiode; i++) {
