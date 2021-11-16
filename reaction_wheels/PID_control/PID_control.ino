@@ -2,7 +2,7 @@
 
 //Define Variables we'll be connecting to
 float readPin = A0;
-int enablePin = 24;
+int enablePin = 8;
 int MotorPin = 7;
 int dirnPin = 6;
 
@@ -32,7 +32,7 @@ void setup()
 
 
 void loop() {
-
+  
   //reading, averaging 500 values
   Input = 0;
   for(int i=0; i<500; i++){
