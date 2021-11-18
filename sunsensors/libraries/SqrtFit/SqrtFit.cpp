@@ -70,7 +70,7 @@ void SqrtFit::set_params(double m, double b, double max_v){
 }
 
 double SqrtFit::get_angle(double voltage){
-  if votlage > max_v
+  if (voltage > max_v)
     return 0.0;
   return fabs(m * sqrt(fabs(max_v - voltage)) + b);
 }
