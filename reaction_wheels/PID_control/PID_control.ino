@@ -1,59 +1,78 @@
 #include <PID_v1.h>
+#include <LightVectorDetermination.h>
 
 //Define Variables we'll be connecting to
-float readPin = A0;
 int enablePin = 8;
 int MotorPin = 7;
 int dirnPin = 6;
 
-double Setpoint = 1000;
-double Input, Output;
+//control parameters
+double Setpoint = 0; //want to maintain angle of incidence of 0deg
+float PWM_out; //used as output from PID controller
+float angle;
 
+//PID gains
 double kp = 2;
 double ki = 0;
 double kd = 0;
 
+// Define globals for photoarray
+const int n_photodiode = 4;  // number of photodiodes
+const int photodiode_pin_offset = 0;  // Note: we assume photodiode pin order is sequential - this is the starting pin number
+const float n_average = 500.0;  // num samples to average over per reading
+bool insert_header = true;
+
+/*
+ * TODO: Load calibration values (cal_voltages)
+ * Reads analog 0, 1, 2, 3 with 0 pin offset
+ */
+
+
+LightVectorDetermination LVD = LightVectorDetermination(n_photodiode, 0, photodiode_pin_offset, n_average);
+
+//fit sqrtfit model to each photodiode using calibration values
+LVD.fit((double **) cal_voltages);
+
 //Specify the links and initial tuning parameters
-PID myPID(&Input, &Output, &Setpoint, kp, ki, kd, DIRECT);
+PID myPID(&angle, &PWM_out, &Setpoint, kp, ki, kd, DIRECT);
 
 void setup()
 {
+  //set up pins
   pinMode(enablePin, OUTPUT);
+  pinMode(MotorPin, OUTPUT);
+  pinMode(dirnPin, OUTPUT);
   digitalWrite(enablePin,1);
-
-  Serial.begin(9600);
-  
-  //initialize the variables we're linked to
-  Input = analogRead(readPin);
 
   //turn the PID on
   myPID.SetMode(AUTOMATIC);
+
+  Serial.begin(9600);
 }
 
 
 void loop() {
   
-  //reading, averaging 500 values
-  Input = 0;
-  for(int i=0; i<500; i++){
-    Input += double(analogRead(readPin)) / 500.0;
-  }
+  //calculate desired angle change with photodiodes
+  angle = LVD.get_global_angle(); 
+  Serial.print("PRED ROTATION ANGLE: ");
+  Serial.println(angle);
 
+  //compute PID output, actuate
   myPID.Compute();
-  Output = constrain(Output, 26, 229);
-  
-  Serial.print(Input);
-  Serial.print(" ");
-  Serial.print(Output);
-  Serial.println();
-  
-  if(Output<0) {
-    analogWrite(MotorPin, abs(Output));  
-    digitalWrite(dirnPin, 0); // Direction
+  PWM_out = constrain(PWM_out, 26, 229);
+
+  Serial.print("PWM OUTPUT: ");
+  Serial.println(PWM_out);
+
+  //sign of PWM_out indicates directionality
+  if(PWM_out<0) {
+    digitalWrite(dirnPin, 0); 
+    analogWrite(MotorPin, abs(PWM_out));  
   }
   else {
-    analogWrite(MotorPin, abs(Output)); 
     digitalWrite(dirnPin, 1); 
+    analogWrite(MotorPin, abs(PWM_out)); 
   }
 
   //delay(100);
