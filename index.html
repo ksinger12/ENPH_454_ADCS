@@ -1,0 +1,427 @@
+<!doctype html>
+<style>
+	.scrollbar {
+		height: 670px;
+		overflow: auto;
+	}
+</style>
+<html>
+	<head>
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
+		<title>reveal.js</title>
+
+		<link rel="stylesheet" href="dist/reset.css">
+		<link rel="stylesheet" href="dist/reveal.css">
+		<link rel="stylesheet" href="dist/theme/moon.css" id="theme">
+		<link rel="stylesheet" href="styles.css">
+
+		<!-- Theme used for syntax highlighted code -->
+		<link rel="stylesheet" href="plugin/highlight/monokai.css" id="highlight-theme">
+		<!-- Theme used for chalkboard-->
+		<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.5.0/css/font-awesome.min.css">
+	</head>
+	<body>
+		<div class="reveal">
+			<div class="slides">
+				<section data-background-image="./images/earth_slide_1.jpeg">
+					<h2>Attitude Determination Control System</h2>
+					<br/>
+					<small style="color:#e0e4e6;">Team Alex: Andrew Hayman, Connor Bayers, Kyle Singer, Ben Wylynko, Matt Wright</small>
+				</section>
+				<section data-auto-animate data-background-image="./images/earth_slide_2.jpeg">
+					<section>
+						<h2>What is an ADCS?</h2>
+					</section>
+					<section data-auto-animate style="color:#e0e4e6;">
+						<h2>What is an ADCS?</h2>
+						An Attitude Dertermination and Control System (ADCS) controls the orientation and position of a satellite in space
+					</section>
+					<section data-auto-animate >
+						<h2>What is an ADCS?</h2>
+						<img src="./images/cubes_example.png">
+						<img style="height: auto; width: 525px;" src="./images/adcs_example.png">
+					</section>
+				</section>
+				<section data-background-image="./images/earth_slide_3.jpeg">
+						<section >
+							<h1>Our Goal</h1>
+						</section>
+						<section>
+							<h3 style="background: rgba(13,13,56,0.4);">Our Goal</h3>
+							<ul>
+								<div></div>
+								<li style="color:#e0e4e6; background: rgba(13,13,56,0.6);" data-background-image="./images/earth_slide_4.jpeg">Build a low-cost prototype ADCS that can be used as an education tool, which is easily approachable by design teams and EiTs</li>
+								<li style="color:#e0e4e6; background: rgba(13,13,56,0.6);" data-background-image="./images/earth_slide_4.jpeg">Achieve space-grade pointing accuracies: 5 degree pointing accuracy for sun vector</li> 
+							</ul>
+						</section>
+						<section>
+							<h3 style="background: rgba(13,13,56,0.4);">Mechanical</h3>
+							<ul style="background: rgba(13,13,56,0.8);">
+								<li>Create an efficient, low-friction, single-axis rotation method to simulate low resistance on a satellite</li>
+								<li>House the electrical componenets in a 10 cm cubic structure</li>
+								<li>Balance all internal components to level the moment of inertia for the entire body of the ADCS</li>
+							</ul>
+						</section>
+						<section>
+							<h3 style="background: rgba(13,13,56,0.4);">Electrical</h3>
+							<ul style="background: rgba(13,13,56,0.8);">
+								<li>Determine the sun angle for resolving the satellite's attitude</li>
+								<li>Use the sun angle (relative to the satellite) to orient the system towards the sun</li>
+								<ul>
+									<li>Critical for solar power charging</li>
+								</ul>
+							</ul>
+						</section>
+						<section>
+							<h3 style="background: rgba(13,13,56,0.4);">Software</h3>
+							<ul style="background: rgba(13,13,56,0.8);">
+								<li>Implement magnetoquers such that they can de-tumble the ADCS</li>
+								<li>Control the system to consistently maintain perpindicular orientation towards a light source</li>
+							</ul>
+						</section>
+					</section>
+				</section>
+				<section data-background-image="./images/earth_slide_5.jpeg">
+					<section>
+						<h1 style="background: rgba(0,0,1,.4);">Our Progress</h1>
+					</section>
+					<section>
+						<video data-autoplay controls loop src="./videos/ADCS_Moving.mp4"></video>
+					</section>
+				</section>
+				<section data-background-image="./images/earth_slide_6.jpeg">
+					<section>
+						<h1>Mechanical</h1>
+					</section>
+					<section data-auto-animate>
+						<h3>Progress</h3>
+						<ul>
+							<li>Multiple plates have been 3D printed with M3 standoffs separating each one</li>
+							<li>Full structure is set between two sets of paired ring bearings</li>
+							<li>Each bearing rests in a circular impression and are connected by plastic posts maximizing freedom of rotation</li>
+						</ul>
+					</section>
+					<section data-auto-animate>
+						<h3>Progress</h3>
+						<img src="./images/layers.png">
+					</section>
+					<section data-auto-animate>
+						<h3>Progress</h3>
+						<img src="./images/plate.png">
+						<img src="./images/post.png">
+					</section>
+					<section data-auto-animate>
+						<h3>Progress</h3>
+						<img style="height: auto; width: 650px;" src="./images/structure.jpg">
+					</section>
+				</section>
+				<section data-background-image="./images/earth_slide_7.jpg">
+					<section>
+						<h1>Electrical</h1>
+					</section>
+					<section data-auto-animate>
+						<h3>Progress</h3>
+						<ul style="color:#e0e4e6;">
+							<li>BPW34 photodiode with transimpedance amplifier</li>
+							<img style="display: block; margin-left: auto; margin-right: auto;" src="./images/BPW34.png">
+							<li>Circuit was built four times for four photodiodes</li>
+						</ul>
+					</section>
+					<section data-auto-animate>
+						<h3>Progress</h3>
+						<ul style="color:#e0e4e6;">
+							<li>Using a 360º voltage sweep, each photodiode's regression model is calibrated</li>
+							<li>Combining computed angles allows for a 360º angle of incidence calculation</li>
+							<li>PoC sun tracking capabilites implement with coarse sun sensors</li>
+							<li>Initial testing shows that angle estimation has significant noise around the normal</li>
+						</ul>
+					</section>
+					<section data-auto-animate>
+						<h3>Progress</h3>
+						<img src="./images/V_A_Photodiode_Array.png">
+					</section>
+					<section data-auto-animate>
+						<h3>Progress</h3>
+						<img src="./images/A_Incidence_V.png">
+					</section>
+					<section data-auto-animate>
+						<h3>Progress</h3>
+						<img src="./images/SR_A_V.png">
+					</section>
+				</section>
+				<section data-background-image="./images/earth_slide_8.jpeg">
+					<section>
+						<h1>Computer</h1>
+					</section>
+					<section data-auto-animate>
+						<h3>Magnetorquers</h3>
+						<ul>
+							<li>Used for de-tumbling the satellite</li>
+							<li>Current (A) values outputted from Arduino when system rotates</li>
+							<li>Magnetorquers have been created and wrapped in copper wire</li>
+						</ul>
+					</section>
+					<section data-auto-animate>
+						<h3>Magnetorquers</h3>
+						<img style="width: 450px; height: auto;" src="./images/magnetorquers.png">
+					</section>
+					<section data-auto-animate>
+						<h3>Magnetorquers</h3>
+						<pre data-id="code-animation"><code class="hljs" data-trim data-line-numbers="|6-7|58|59|66-67"><script type="text/template">
+								#include <Wire.h>
+								#include "Adafruit_MLX90393.h"
+								#include <MPU6050.h>
+								#define MLX90393_CS 10
+								
+								Adafruit_MLX90393 sensor = Adafruit_MLX90393();
+								MPU6050 mpu;
+								
+								float currentThroughCoils[3]; // 3 column array (3D vector -> x,y,z) -> one for each solenoid
+								float k = 46040; // going to need a relative magnitude value of k -> further research may be need or just example math
+								float kCurrent = 1; //current used to calculate k -> 1 A
+								float magneticField[3]; // earth's magnetic field -> 3 coumn array (3D vector -> x,y,z)
+								bool movement; // how are we moving -> detumbling satellite vs. detumbling motors | true = motors, false = satellite
+								float AREA_OF_COILS = PI*pow(0.0045,2);
+								int NUMBER_OF_TURNS = 61;
+								
+								
+								void setup() 
+								{
+								  Serial.begin(115200);
+								
+								  // Initialize MPU6050
+								  Serial.println("Initialize MPU6050");
+								  while(!mpu.begin(MPU6050_SCALE_2000DPS, MPU6050_RANGE_2G))
+								  {
+									Serial.println("Could not find a valid MPU6050 sensor, check wiring!");
+									delay(500);
+								  }
+								
+								  mpu.calibrateGyro();
+								  mpu.setThreshold(3);
+								
+								  while (!Serial) {
+										delay(10);
+									}
+								
+								  if (! sensor.begin_I2C()) {
+									Serial.println("No sensor found ... check your wiring?");
+									while (1) { delay(10); }
+								  }
+								  Serial.println("Found a MLX90393 sensor");
+								
+								
+								  sensor.setGain(MLX90393_GAIN_2_5X);
+								
+								  // Set resolution, per axis
+								  sensor.setResolution(MLX90393_X, MLX90393_RES_19);
+								  sensor.setResolution(MLX90393_Y, MLX90393_RES_19);
+								  sensor.setResolution(MLX90393_Z, MLX90393_RES_16);
+								
+								  // Set oversampling
+								  sensor.setOversampling(MLX90393_OSR_2);
+								
+								  // Set digital filtering
+								  sensor.setFilter(MLX90393_FILTER_6);
+								}
+								
+								void currentCalculator(Vector gyro, float mX, float mY, float mZ) {
+								  float constant = k*NUMBER_OF_TURNS*AREA_OF_COILS;
+								
+								  mX = mX*pow(10,-6);
+								  mY = mY*pow(10,-6);
+								  mZ = mZ*pow(10,-6);
+								  float angularVelocity = gyro.XAxis*0.0174533; //rad/s
+								
+								  currentThroughCoils[0] = constant*mY*angularVelocity;
+								  currentThroughCoils[1] = constant*mX*angularVelocity;
+								
+								  
+								  if (currentThroughCoils[0]+currentThroughCoils[1] > kCurrent) { //use current that calculated k with
+									float magnitude = sqrt(pow(currentThroughCoils[0],2) + pow(currentThroughCoils[1], 2));
+									currentThroughCoils[0] = currentThroughCoils[0]/magnitude*kCurrent;
+									currentThroughCoils[1] = currentThroughCoils[1]/magnitude*kCurrent;
+								  }
+								
+								}
+								
+								void loop()
+								{
+								  Vector normGyro = mpu.readNormalizeGyro();
+								
+								  Serial.print(" Xnorm = ");
+								  Serial.print(normGyro.XAxis);
+								  Serial.print(" Ynorm = ");
+								  Serial.print(normGyro.YAxis);
+								  Serial.print(" Znorm = ");
+								  Serial.println(normGyro.ZAxis);
+								
+								
+								  sensors_event_t event;
+								  sensor.getEvent(&event);
+								
+								  Serial.print("\n");
+								  Serial.print("Bx = ");
+								  Serial.print(event.magnetic.x);
+								  Serial.print("\n");
+								  Serial.print("By = ");
+								  Serial.print(event.magnetic.y);
+								  Serial.print("\n");
+								  Serial.print("Bz = ");
+								  Serial.print(event.magnetic.z);
+								  Serial.print("\n");
+								  Serial.print("\n");
+								  Serial.print("\n");
+								
+								  
+								  Serial.println("");
+								  currentCalculator(normGyro, event.magnetic.x, event.magnetic.y, event.magnetic.y);
+								  Serial.print("Ix: "); Serial.print(currentThroughCoils[0]);
+								  Serial.print(" \tIy: "); Serial.print(currentThroughCoils[1]);
+								  delay(500);
+								}
+						</script></code></pre>
+					</section>
+					<section>
+						<h2>Motors</h2>
+						<ul style="color:#e0e4e6;">
+							<li>Conservation of angular momentum calculations to determine required RPM</li>
+							<li>Commands are given to the motor</li>
+							<li>Motor's speed rises to meet the request</li>
+						</ul>
+						<img src="./images/motor_plot.png">
+					</section>
+					<section data-auto-animate>
+						<h2>PID Controller</h2>
+						<img src="./images/pid_image.png">
+						<ul style="background: rgba(0,0,1,.4); color:#e0e4e6;">
+							<li style="list-style-type: none;">Set point: Photodiode voltage threshold</li>
+							<li style="list-style-type: none;">Sensor input: current photodiode reading</li>
+							<li style="list-style-type: none;">Output: PWM duty cycle for motor speed</li>
+						</ul>
+					</section>
+				</section>
+				<section data-background-image="./images/earth_slide_11.jpeg">
+					<h3>Safety</h3>
+					<ul style="color:#e0e4e6;">
+						<li>Soldering and de-soldering using ventilation and protective glasses</li>
+						<li>Not over discharging LiPo battery</li>
+					</ul>
+				</section>
+				<section data-background-image="./images/earth_slide_12.webp" style="background: rgba(0,0,1,.4);">
+					<section>
+						<h1>Next Steps</h1>
+					</section>
+					<section>
+						<h3>Mechanical & Power</h3>
+						<h5>Iterative (Weeks 10-12):</h5>
+						<ul>
+							<li>Some aspects of the design may cause mechanical drag with limited time to fix the problem</li>
+							<li>3D printed pieces need to be managed and well-documented for future use</li>
+							<li>Update power system to use 3S LiPo battery with capacitor and fuses</li>
+						</ul>
+					</section>
+					<section data-auto-animate>
+						<h3>Control System</h3>
+						<h5>Week 10</h5>
+						<ul style="color:#e0e4e6;">
+							<li>Develop testing plan to validate angle prediction and sun tracking accuracy</li>
+							<li>Research and identify methods to power op-amp from single 12V source</li>
+							<li>Implementing DACs with magnetorquer system</li>
+							
+						</ul>
+					</section>
+					<section data-auto-animate>
+						<h3>Control System</h3>
+						<h5>Week 11</h5>
+						<ul>
+							<li>Design calibration protocol for sun sensors for when satellite is spinning in space</li>
+							<li>Sampling photodiodes at specific frequencies based on angular velocity</li>
+							<li>Testing time for ADCS to slow down with magnetorquer system running</li>
+							<ul>
+								<li>Magnets needed to increase the magnetic field surrounding the ADCS</li>
+							</ul>
+						</ul>
+					</section>
+					<section data-auto-animate>
+						<h3>Control System</h3>
+						<h5>Iterative (Weeks 10-12):</h5>
+						<ul>
+							<li>Design a fine tune sun sensing system</li>
+							<li>Adding a three dimensional light vector estimation</li>
+							<li>Integrating motors with the four photodiode system</li>
+							<li>Tuning control algorithm for further accuracy</li>
+						</ul>
+					</section>
+				</section>
+				<section data-background-image="./images/storm.webp">
+					<section>
+						<h1>Summary</h1>
+					</section>
+					<section>
+						<h2>Completed</h2>
+						<img src="./images/full_gantt.png">
+					</section>
+					<section>
+						<h2>To Be Completed</h2>
+						<img src="./images/future_gantt.png">
+					</section>
+				</section>
+				<section data-background-image="./images/earth_slide_10.jpeg">
+					<h2>Questions?</h2>
+				</section>
+				<!-- <section>
+					<iframe src='https://cdn.knightlab.com/libs/timeline3/latest/embed/index.html?source=12vBBwsyqnQp1H_WREH3iwj2elmM8kbsSTzS3XB1cfho&font=Default&lang=en&initial_zoom=2&height=650' width='100%' height='650' webkitallowfullscreen mozallowfullscreen allowfullscreen frameborder='0'></iframe>
+				</section> -->
+			</div>
+		</div>
+
+		<script src="dist/reveal.js"></script>
+		<script src="plugin/notes/notes.js"></script>
+		<script src="plugin/markdown/markdown.js"></script>
+		<script src="plugin/highlight/highlight.js"></script>
+		<script src="plugin/chart/Chart.min.js"></script>
+		<script src="plugin/chart/plugin.js"></script>
+		<script src="plugin/chalkboard/plugin.js"></script>
+		<script src="plugin/seminar/plugin.js"></script>
+		<script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/2.3.0/socket.io.js"></script>
+		<script>
+			// More info about initialization & config:
+			// - https://revealjs.com/initialization/
+			// - https://revealjs.com/config/
+			Reveal.initialize({
+				hash: true,
+				seminar: {
+					server: 'https://seminar.eu.openode.io', // change server as necessary
+					room: 'ENPH 454 - Team Alex', // put your room name here
+					hash: '$2a$05$hhgakVn1DWBfgfSwMihABeYToIBEiQGJ.ONa.HWEiNGNI6mxFCy8S', // a hash is required for every seminar room and can be generated on the URL of the socket.io server
+					autoJoin: true // set to true to automatically join the seminar room
+				},
+				chart: {
+					defaults: {
+						global: {
+							title: { fontColor: "#FFF" },
+							legend: {
+								labels: { fontColor: "#FFF" },
+							},
+						},
+						scale: {
+							scaleLabel: { fontColor: "#FFF" },
+							gridLines: { color: "#FFF", zeroLineColor: "#FFF" },
+							ticks: { fontColor: "#FFF" },
+						}
+					},
+					line: { borderColor: [ "rgba(20,220,220,.8)" , "rgba(220,120,120,.8)", "rgba(20,120,220,.8)" ], "borderDash": [ [5,10], [0,0] ]},
+					bar: { backgroundColor: [ "rgba(20,220,220,.8)" , "rgba(220,120,120,.8)", "rgba(20,120,220,.8)" ]},
+					pie: { backgroundColor: [ ["rgba(0,0,0,.8)" , "rgba(220,20,20,.8)", "rgba(20,220,20,.8)", "rgba(220,220,20,.8)", "rgba(20,20,220,.8)"] ]},
+					radar: { borderColor: [ "rgba(20,220,220,.8)" , "rgba(220,120,120,.8)", "rgba(20,120,220,.8)" ]},
+				},
+
+				// Learn about plugins: https://revealjs.com/plugins/
+				plugins: [ RevealMarkdown, RevealHighlight, RevealNotes, RevealChart, RevealChalkboard, RevealSeminar ]
+			});
+		</script>
+	</body>
+</html>
