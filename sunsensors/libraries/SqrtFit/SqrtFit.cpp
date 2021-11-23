@@ -7,6 +7,7 @@ SqrtFit::SqrtFit() {}
 
 SqrtFit::SqrtFit(int n_samples){
   this->n_samples = n_samples;
+  set_params((double) 6, (double) 1, (double) 800);
 }
 
 void SqrtFit::fit(double voltages[]){

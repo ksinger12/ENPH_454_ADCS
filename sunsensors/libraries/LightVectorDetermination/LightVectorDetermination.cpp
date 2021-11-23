@@ -97,7 +97,7 @@ void LightVectorDetermination::read_photodiode_array(double ** voltages, int col
   }
 }
 
-float LightVectorDetermination::_read_photodiode(int photo_pin){
+double LightVectorDetermination::_read_photodiode(int photo_pin){
   /* Reads a photo diode and returns the averaged signal */
   double reading_avg = 0.0;
   for (int j = 0; j < n_avg; j++)

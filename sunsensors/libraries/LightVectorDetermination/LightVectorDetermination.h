@@ -19,7 +19,7 @@ class LightVectorDetermination {
     void set_params(double m, double b, double max_v);
     void read_photodiode_array(double * voltages);
     void read_photodiode_array(double ** voltages, int col);
-    float _read_photodiode(int pin);
+    double _read_photodiode(int pin);
 };
 
 #endif
