@@ -3,6 +3,9 @@
 
 #include "Arduino.h"
 #include "SqrtFit.h"
+#include <MPU6050.h>
+
+#define TWO_PI 6.283185307179586476925286766559
 
 class LightVectorDetermination {
   public:
@@ -20,6 +23,9 @@ class LightVectorDetermination {
     void read_photodiode_array(double * voltages);
     void read_photodiode_array(double ** voltages, int col);
     double _read_photodiode(int pin);
+    void read_photodiode_array_even_time(double * voltages);
+    void auto_calibrate(double ** voltages);
+    double get_z_gryo();
 };
 
 #endif
