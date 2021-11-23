@@ -1,4 +1,5 @@
 #include <PID_v1.h>
+#include <SqrtFit.h>
 #include <LightVectorDetermination.h>
 
 //Define Variables we'll be connecting to
@@ -8,8 +9,8 @@ int dirnPin = 6;
 
 //control parameters
 double Setpoint = 0; //want to maintain angle of incidence of 0deg
-float PWM_out; //used as output from PID controller
-float angle;
+double PWM_out; //used as output from PID controller
+double angle;
 
 //PID gains
 double kp = 2;
@@ -26,12 +27,11 @@ bool insert_header = true;
  * TODO: Load calibration values (cal_voltages)
  * Reads analog 0, 1, 2, 3 with 0 pin offset
  */
+const int n_cal_readings = 500;
+double cal_voltages[n_photodiode][n_cal_readings];
 
 
 LightVectorDetermination LVD = LightVectorDetermination(n_photodiode, 0, photodiode_pin_offset, n_average);
-
-//fit sqrtfit model to each photodiode using calibration values
-LVD.fit((double **) cal_voltages);
 
 //Specify the links and initial tuning parameters
 PID myPID(&angle, &PWM_out, &Setpoint, kp, ki, kd, DIRECT);
@@ -52,6 +52,9 @@ void setup()
 
 
 void loop() {
+
+  //fit sqrtfit model to each photodiode using calibration values
+  LVD.fit((double **) cal_voltages);
   
   //calculate desired angle change with photodiodes
   angle = LVD.get_global_angle(); 
@@ -75,6 +78,7 @@ void loop() {
     analogWrite(MotorPin, abs(PWM_out)); 
   }
 
+  
   //delay(100);
 }
 /*
