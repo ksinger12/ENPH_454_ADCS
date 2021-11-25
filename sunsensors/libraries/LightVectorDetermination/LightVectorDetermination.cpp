@@ -106,3 +106,61 @@ double LightVectorDetermination::_read_photodiode(int photo_pin){
   return reading_avg; 
 }
 
+// This method should possibly be renamed for clarity
+void LightVectorDetermination::read_photodiode_array_even_time(double * voltages) {
+    /*This function is need to ensure that samples for each photodiode occur at the same time */
+
+    // Allocate arrays for average readings and set them all to zero
+    double* reading_avg = (double*)malloc(n_photodiode*sizeof(double));
+    memset(reading_avg, 0, n_photodiode);
+
+    for(int sample = 0; sample < n_avg; sample++) {
+        for (int pd = 0; pd < n_photodiode; pd++) {
+            int photo_pin = pd + photo_pin_offset;
+            reading_avg[pd] += (double) analogRead(photo_pin) / n_avg;
+        }
+    }
+
+    for (int pd = 0; pd < n_photodiode; pd++) {
+        voltages[pd] = reading_avg[pd];
+    }
+
+    free(reading_avg);
+}
+
+void LightVectorDetermination::auto_calibrate(double ** voltages) {
+    double resolution = TWO_PI / n_readings;                                        // In radians
+    double angular_velocity = get_z_gryo();                                         // In radians/second
+    unsigned long long dt = (unsigned long long)(resolution / angular_velocity);    // In seconds
+    // There should be a check for division by zero/low angular velocity.
+
+    unsigned long long start_time = millis();
+    unsigned long long end_time;
+    unsigned long long code_time;
+    for(int i=0; i<n_readings; i++) {
+        read_photodiode_array_even_time(voltages[i]);
+        end_time = millis();
+        code_time = end_time-start_time;
+
+        // Check if satellite is spinning too fast
+        if(code_time>dt) {
+            Serial.println("Satellite is spinning too fast to gather samples");
+            Serial.print("Code Time");
+            Serial.println(code_time);
+            Serial.print("Time spacing: ");
+            Serial.println(dt);
+        }
+
+        delay(dt-code_time);
+        start_time = millis();
+    }
+}
+
+double LightVectorDetermination::get_z_gryo() {
+    MPU6050 mpu;
+    mpu.calibrateGyro();
+    mpu.setThreshold(3);
+    Vector angularVelocitySatellite = mpu.readNormalizeGyro();
+    return angularVelocitySatellite.ZAxis;
+}
+

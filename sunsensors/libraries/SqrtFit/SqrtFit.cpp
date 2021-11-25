@@ -7,7 +7,7 @@ SqrtFit::SqrtFit() {}
 
 SqrtFit::SqrtFit(int n_samples){
   this->n_samples = n_samples;
-  set_params((double) 4.94, (double) 11.22, (double) 818.00);
+  set_params((double) 6, (double) 1, (double) 800);
 }
 
 void SqrtFit::fit(double voltages[]){
@@ -60,9 +60,7 @@ void SqrtFit::fit(double voltages[]){
   
   Serial.print("theta = ");
   Serial.print(m);
-  Serial.print(" * sqrt( ");
-  Serial.print(max_v);
-  Serial.print(" - V ) + ");
+  Serial.print(" * V + ");
   Serial.println(b);
 }
 
