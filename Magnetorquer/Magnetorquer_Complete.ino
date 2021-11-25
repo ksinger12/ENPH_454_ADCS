@@ -69,7 +69,7 @@ void currentCalculator(Vector gyro, float mX, float mY, float mZ) {
   mX = mX*pow(10,-6);
   mY = mY*pow(10,-6);
   mZ = mZ*pow(10,-6);
-  float angularVelocity = gyro.XAxis*0.0174533; //rad/s
+  float angularVelocity = gyro.ZAxis*0.0174533; //rad/s
 
   currentThroughCoils[0] = constant*mY*angularVelocity;
   currentThroughCoils[1] = constant*mX*angularVelocity;
@@ -124,10 +124,10 @@ void loop()
   Serial.print("Output: Vx: "); Serial.print(voltageX);
   Serial.print("\tOutput Vy: "); Serial.print(voltageY);
   Serial.println("");
-  Serial.print("Vx: "); Serial.print(voltageX/voltageOutputRate);
-  Serial.print("Vy: "); Serial.print(voltageY/voltageOutputRate);
   dac1.setVoltage(voltageX, false);
   dac2.setVoltage(voltageY, false);
+    Serial.print("Vx: "); Serial.print(voltageX/voltageOutputRate);
+  Serial.print("Vy: "); Serial.print(voltageY/voltageOutputRate);
   
 
   delay(500);
