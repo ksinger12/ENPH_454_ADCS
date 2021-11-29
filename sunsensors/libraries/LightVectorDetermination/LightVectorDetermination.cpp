@@ -3,12 +3,14 @@
 #include "LightVectorDetermination.h"
 
 
-LightVectorDetermination::LightVectorDetermination(int n_diodes, int n_readings, int pin_offset, int n_avg) {
+LightVectorDetermination::LightVectorDetermination(int n_diodes, int n_readings, int pin_offset, int n_avg, int fine_offset=4) {
   this->n_photodiode = n_diodes;
   this->n_readings = n_readings;
   this->photo_pin_offset = pin_offset;
   this->n_avg = n_avg;
   light_models = new SqrtFit[n_diodes];
+  fine_models = new SqrtFit[2];
+  this->fine_offset = fine_offset;
 }
 
 void LightVectorDetermination::fit(double ** voltages) {
@@ -17,6 +19,9 @@ void LightVectorDetermination::fit(double ** voltages) {
     light_models[i] = SqrtFit(n_readings);
     light_models[i].fit((double *)voltages + n_readings * i);
   }
+  // TODO figure out calibration of fine sunsensors with the team
+  for (int i = 0; i < 2; i++)
+    fine_models[i] = SqrtFit(n_readings)
 }
 
 float LightVectorDetermination::get_global_angle() {
@@ -64,7 +69,27 @@ float LightVectorDetermination::get_global_angle(double * voltages) {
   float result = (angle_1 + angle_2) / 2.0;
   if (result > 180)
     result = result - 360;
+  
+  if (fabs(result) < 35)
+    result = get_fine_angle();
+
   return result;
+}
+
+float LightVectorDetermination::get_fine_angle(){
+  // Computes angle of incidence from fine sunsensor. Only should be used for abs(angle) < 40
+  // since the photodiodes are angled 45 deg from incidence. Assumes the photodiode analog
+  // pins are sequential starting with some offset.
+  // First diode should point at -45 and the second at +45
+  float pred_angles[2];
+  double voltages[2];
+
+  // TODO use even time function
+  read_photodiode_array(voltages, 2, fine_offset);
+  for (int i = 0; i < 2; i++)
+    pred_angles[i] = fine_models[i].get_angle(voltages[i]);
+  
+  return (pred_angles[0] - pred_angles[1]) / 2.0;  // average angles
 }
 
 void LightVectorDetermination::set_params(double m, double b, double max_v) {

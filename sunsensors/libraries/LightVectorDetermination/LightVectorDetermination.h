@@ -10,10 +10,12 @@
 class LightVectorDetermination {
   public:
     SqrtFit* light_models;
+    SqrtFit* fine_models;
     int n_photodiode;
     int n_readings;
     int photo_pin_offset;
     int n_avg;
+    int fine_offset;
 
     LightVectorDetermination(int n_photodiode, int n_readings, int pin_offset, int n_avg);
     void fit(double** voltages);
