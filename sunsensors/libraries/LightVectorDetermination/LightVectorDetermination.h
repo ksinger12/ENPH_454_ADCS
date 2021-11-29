@@ -17,6 +17,8 @@ class LightVectorDetermination {
     int n_avg;
     int fine_offset;
 
+    // TEST
+
     LightVectorDetermination(int n_photodiode, int n_readings, int pin_offset, int n_avg);
     void fit(double** voltages);
     float get_global_angle();
