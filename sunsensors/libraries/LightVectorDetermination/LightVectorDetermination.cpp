@@ -73,9 +73,13 @@ void LightVectorDetermination::set_params(double m, double b, double max_v) {
 }
 
 void LightVectorDetermination::read_photodiode_array(double * voltages) {
+  read_photodiode_array(voltages, n_photodiode, photo_pin_offset);
+}
+
+void LightVectorDetermination::read_photodiode_array(double * voltages, int n, int offset) {
   /* Populates a 1D voltage array with photodiode array data */
-  for (int i = 0; i < n_photodiode; i++) {
-    int photo_pin = i + photo_pin_offset;
+  for (int i = 0; i < n; i++) {
+    int photo_pin = i + offset;
     voltages[i] = _read_photodiode(photo_pin);
   }
 }
@@ -106,22 +110,26 @@ double LightVectorDetermination::_read_photodiode(int photo_pin){
   return reading_avg; 
 }
 
-// This method should possibly be renamed for clarity
 void LightVectorDetermination::read_photodiode_array_even_time(double * voltages) {
+  read_photodiode_array_even_time(voltages, n_photodiode, photo_pin_offset);
+}
+
+// This method should possibly be renamed for clarity
+void LightVectorDetermination::read_photodiode_array_even_time(double * voltages, int n, int offset) {
     /*This function is need to ensure that samples for each photodiode occur at the same time */
 
     // Allocate arrays for average readings and set them all to zero
-    double* reading_avg = (double*)malloc(n_photodiode*sizeof(double));
-    memset(reading_avg, 0, n_photodiode);
+    double* reading_avg = (double*)malloc(n * sizeof(double));
+    memset(reading_avg, 0, n);
 
     for(int sample = 0; sample < n_avg; sample++) {
-        for (int pd = 0; pd < n_photodiode; pd++) {
-            int photo_pin = pd + photo_pin_offset;
+        for (int pd = 0; pd < n; pd++) {
+            int photo_pin = pd + offset;
             reading_avg[pd] += (double) analogRead(photo_pin) / n_avg;
         }
     }
 
-    for (int pd = 0; pd < n_photodiode; pd++) {
+    for (int pd = 0; pd < n; pd++) {
         voltages[pd] = reading_avg[pd];
     }
 

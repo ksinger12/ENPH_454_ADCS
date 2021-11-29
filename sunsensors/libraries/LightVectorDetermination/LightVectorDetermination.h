@@ -21,9 +21,11 @@ class LightVectorDetermination {
     float get_global_angle(double * voltages);
     void set_params(double m, double b, double max_v);
     void read_photodiode_array(double * voltages);
+    void read_photodiode_array(double * voltages, int n, int, offset);
     void read_photodiode_array(double ** voltages, int col);
     double _read_photodiode(int pin);
     void read_photodiode_array_even_time(double * voltages);
+    void read_photodiode_array_even_time(double * voltages, int n, int offset);
     void auto_calibrate(double ** voltages);
     double get_z_gryo();
 };
