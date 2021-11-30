@@ -21,7 +21,7 @@ void LightVectorDetermination::fit(double ** voltages) {
   }
   // TODO figure out calibration of fine sunsensors with the team
   for (int i = 0; i < 2; i++)
-    fine_models[i] = SqrtFit(n_readings)
+    fine_models[i] = SqrtFit(n_readings);
 }
 
 float LightVectorDetermination::get_global_angle() {
@@ -81,7 +81,7 @@ float LightVectorDetermination::get_fine_angle(){
   // since the photodiodes are angled 45 deg from incidence. Assumes the photodiode analog
   // pins are sequential starting with some offset.
   // First diode should point at -45 and the second at +45
-  float pred_angles[2];
+  float pred_angles[2];  // 2 fine sunsensors
   double voltages[2];
 
   // TODO use even time function
@@ -190,6 +190,7 @@ void LightVectorDetermination::auto_calibrate(double ** voltages) {
 }
 
 double LightVectorDetermination::get_z_gryo() {
+  return 0;
     MPU6050 mpu;
     mpu.calibrateGyro();
     mpu.setThreshold(3);

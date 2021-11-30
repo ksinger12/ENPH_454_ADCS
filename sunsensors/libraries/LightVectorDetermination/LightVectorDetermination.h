@@ -19,13 +19,14 @@ class LightVectorDetermination {
 
     // TEST
 
-    LightVectorDetermination(int n_photodiode, int n_readings, int pin_offset, int n_avg);
+    LightVectorDetermination(int n_photodiode, int n_readings, int pin_offset, int n_avg, int fine_offset);
     void fit(double** voltages);
     float get_global_angle();
     float get_global_angle(double * voltages);
+    float get_fine_angle();
     void set_params(double m, double b, double max_v);
     void read_photodiode_array(double * voltages);
-    void read_photodiode_array(double * voltages, int n, int, offset);
+    void read_photodiode_array(double * voltages, int n, int offset);
     void read_photodiode_array(double ** voltages, int col);
     double _read_photodiode(int pin);
     void read_photodiode_array_even_time(double * voltages);
