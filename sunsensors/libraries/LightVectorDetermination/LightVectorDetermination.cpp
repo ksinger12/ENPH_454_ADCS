@@ -3,12 +3,14 @@
 #include "LightVectorDetermination.h"
 
 
-LightVectorDetermination::LightVectorDetermination(int n_diodes, int n_readings, int pin_offset, int n_avg) {
+LightVectorDetermination::LightVectorDetermination(int n_diodes, int n_readings, int pin_offset, int n_avg, int fine_offset=4) {
   this->n_photodiode = n_diodes;
   this->n_readings = n_readings;
   this->photo_pin_offset = pin_offset;
   this->n_avg = n_avg;
   light_models = new SqrtFit[n_diodes];
+  fine_models = new SqrtFit[2];
+  this->fine_offset = fine_offset;
 }
 
 void LightVectorDetermination::fit(double ** voltages) {
@@ -17,6 +19,9 @@ void LightVectorDetermination::fit(double ** voltages) {
     light_models[i] = SqrtFit(n_readings);
     light_models[i].fit((double *)voltages + n_readings * i);
   }
+  // TODO figure out calibration of fine sunsensors with the team
+  for (int i = 0; i < 2; i++)
+    fine_models[i] = SqrtFit(n_readings);
 }
 
 float LightVectorDetermination::get_global_angle() {
@@ -64,7 +69,27 @@ float LightVectorDetermination::get_global_angle(double * voltages) {
   float result = (angle_1 + angle_2) / 2.0;
   if (result > 180)
     result = result - 360;
+  
+  if (fabs(result) < 35)
+    result = get_fine_angle();
+
   return result;
+}
+
+float LightVectorDetermination::get_fine_angle(){
+  // Computes angle of incidence from fine sunsensor. Only should be used for abs(angle) < 40
+  // since the photodiodes are angled 45 deg from incidence. Assumes the photodiode analog
+  // pins are sequential starting with some offset.
+  // First diode should point at -45 and the second at +45
+  float pred_angles[2];  // 2 fine sunsensors
+  double voltages[2];
+
+  // TODO use even time function
+  read_photodiode_array(voltages, 2, fine_offset);
+  for (int i = 0; i < 2; i++)
+    pred_angles[i] = fine_models[i].get_angle(voltages[i]);
+  
+  return (pred_angles[0] - pred_angles[1]) / 2.0;  // average angles
 }
 
 void LightVectorDetermination::set_params(double m, double b, double max_v) {
@@ -73,9 +98,13 @@ void LightVectorDetermination::set_params(double m, double b, double max_v) {
 }
 
 void LightVectorDetermination::read_photodiode_array(double * voltages) {
+  read_photodiode_array(voltages, n_photodiode, photo_pin_offset);
+}
+
+void LightVectorDetermination::read_photodiode_array(double * voltages, int n, int offset) {
   /* Populates a 1D voltage array with photodiode array data */
-  for (int i = 0; i < n_photodiode; i++) {
-    int photo_pin = i + photo_pin_offset;
+  for (int i = 0; i < n; i++) {
+    int photo_pin = i + offset;
     voltages[i] = _read_photodiode(photo_pin);
   }
 }
@@ -106,22 +135,26 @@ double LightVectorDetermination::_read_photodiode(int photo_pin){
   return reading_avg; 
 }
 
-// This method should possibly be renamed for clarity
 void LightVectorDetermination::read_photodiode_array_even_time(double * voltages) {
+  read_photodiode_array_even_time(voltages, n_photodiode, photo_pin_offset);
+}
+
+// This method should possibly be renamed for clarity
+void LightVectorDetermination::read_photodiode_array_even_time(double * voltages, int n, int offset) {
     /*This function is need to ensure that samples for each photodiode occur at the same time */
 
     // Allocate arrays for average readings and set them all to zero
-    double* reading_avg = (double*)malloc(n_photodiode*sizeof(double));
-    memset(reading_avg, 0, n_photodiode);
+    double* reading_avg = (double*)malloc(n * sizeof(double));
+    memset(reading_avg, 0, n);
 
     for(int sample = 0; sample < n_avg; sample++) {
-        for (int pd = 0; pd < n_photodiode; pd++) {
-            int photo_pin = pd + photo_pin_offset;
+        for (int pd = 0; pd < n; pd++) {
+            int photo_pin = pd + offset;
             reading_avg[pd] += (double) analogRead(photo_pin) / n_avg;
         }
     }
 
-    for (int pd = 0; pd < n_photodiode; pd++) {
+    for (int pd = 0; pd < n; pd++) {
         voltages[pd] = reading_avg[pd];
     }
 
@@ -157,6 +190,7 @@ void LightVectorDetermination::auto_calibrate(double ** voltages) {
 }
 
 double LightVectorDetermination::get_z_gryo() {
+  return 0;
     MPU6050 mpu;
     mpu.calibrateGyro();
     mpu.setThreshold(3);

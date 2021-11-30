@@ -3,11 +3,19 @@
 #include "math.h"
 
 
-SqrtFit::SqrtFit() {}
+SqrtFit::SqrtFit() {
+  this->m = 4.94;
+  this->b = 11.2;
+  this->max_v = 818.0;
+}
 
 SqrtFit::SqrtFit(int n_samples){
   this->n_samples = n_samples;
-  set_params((double) 6, (double) 1, (double) 800);
+  this->m = 4.94;
+  this->b = 11.2;
+  this->max_v = 818.0;
+  // set_params( 4.94,  11.22,  818.00);
+  // set_params((double) 4.94, (double) 11.22, (double) 818.00);
 }
 
 void SqrtFit::fit(double voltages[]){
@@ -60,7 +68,9 @@ void SqrtFit::fit(double voltages[]){
   
   Serial.print("theta = ");
   Serial.print(m);
-  Serial.print(" * V + ");
+  Serial.print(" * sqrt( ");
+  Serial.print(max_v);
+  Serial.print(" - V ) + ");
   Serial.println(b);
 }
 
