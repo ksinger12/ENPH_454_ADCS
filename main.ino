@@ -1,10 +1,14 @@
 #include "remote_control.h"
+#include "earthSeeking.h"
 
 const int IR_RECEIVE_PIN = 2;
 
 int MODE = 0; 
 int BUFFER_ANGLE = 0; 
 int TARGET_ANGLE = 0; 
+
+//desired angle change
+double changeAngle;
 
 void setup(){
   Serial.begin(9600);
@@ -29,8 +33,13 @@ void loop(){
       case EARTH_SEEKING_MODE:
         Serial.println("MODE: EARTH SEEKING"); 
         // setup pid method
+        setupEarthSeeking(TARGET_ANGLE)
         while(MODE==EARTH_SEEKING_MODE) {
-          delay(100); // run pid method
+          readBdirection();
+          changeAngle = getEarthAngle();
+          updatePID(changeAngle);
+          actuateMotor();
+          delay(5); // run pid method
         }
         break;
         

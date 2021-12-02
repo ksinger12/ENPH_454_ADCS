@@ -8,7 +8,7 @@ int MotorPin = 7;
 int dirnPin = 6;
 
 //control parameters
-double Setpoint = 0; //want to maintain angle of incidence of 0deg
+double Setpoint; //want to maintain angle of incidence of 0deg
 double PWM_out; //used as output from PID controller
 double angle;
 

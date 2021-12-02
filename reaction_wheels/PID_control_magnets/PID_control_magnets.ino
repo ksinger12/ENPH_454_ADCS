@@ -110,15 +110,6 @@ void loop() {
 
   //actuating to this angle should make it try to orient a face towards the magnet
   angle = magnetAngle; 
-
-  //arduino PID package
-  /*
-  myPID.Compute();
-  Serial.println("Raw PID PWM output: ");
-  Serial.println(PWM_out);
-  PWM_out = constrain(PWM_out, -229, 229);
-  */
-
   
   //try running with a manual PID implementation
   //source: https://www.teachmemicro.com/arduino-pid-control-tutorial/
@@ -136,8 +127,6 @@ void loop() {
   lastError = error;
   previousTime = currentTime;
 
-  //Serial.print("PWM OUTPUT: ");
-  //Serial.println(PWM_out);
 
   //sign of PWM_out indicates directionality
   if(PWM_out<0) {
