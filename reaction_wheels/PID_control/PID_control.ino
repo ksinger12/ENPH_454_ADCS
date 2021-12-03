@@ -1,21 +1,27 @@
-#include <PID_v1.h>
+//#include <PID_v1.h>
 #include <SqrtFit.h>
 #include <LightVectorDetermination.h>
 
 //Define Variables we'll be connecting to
 int enablePin = 8;
-int MotorPin = 7;
-int dirnPin = 6;
+int MotorPin = 11;
+int dirnPin = 10;
 
 //control parameters
 double Setpoint; //want to maintain angle of incidence of 0deg
 double PWM_out; //used as output from PID controller
 double angle;
+double readOffset; //might use to account for measured angle error
 
 //PID gains
-double kp = 2;
-double ki = 0;
-double kd = 0;
+double kp = 0.75;
+double ki = 0.002;
+double kd = 10;
+double cumError, rateError;
+double lastError;
+unsigned long currentTime, previousTime;
+double elapsedTime;
+double error;
 
 // Define globals for photoarray
 const int n_photodiode = 4;  // number of photodiodes
@@ -34,7 +40,7 @@ double cal_voltages[n_photodiode][n_cal_readings];
 LightVectorDetermination LVD = LightVectorDetermination(n_photodiode, 0, photodiode_pin_offset, n_average);
 
 //Specify the links and initial tuning parameters
-PID myPID(&angle, &PWM_out, &Setpoint, kp, ki, kd, DIRECT);
+//PID myPID(&angle, &PWM_out, &Setpoint, kp, ki, kd, DIRECT);
 
 void setup()
 {
@@ -52,34 +58,52 @@ void setup()
 
 
 void loop() {
-
-  //fit sqrtfit model to each photodiode using calibration values
-  LVD.fit((double **) cal_voltages);
   
   //calculate desired angle change with photodiodes
   angle = LVD.get_global_angle(); 
   Serial.print("PRED ROTATION ANGLE: ");
   Serial.println(angle);
 
-  //compute PID output, actuate
-  myPID.Compute();
-  PWM_out = constrain(PWM_out, 26, 229);
+  //try running with a manual PID implementation
+  //source: https://www.teachmemicro.com/arduino-pid-control-tutorial/
+  currentTime = millis();
+  elapsedTime = currentTime - previousTime;
+
+  error = angle - Setpoint;
+  cumError += (error * elapsedTime) / 1000;
+  
+  rateError = (error - lastError) / elapsedTime;
+
+  PWM_out = kp * error + ki * cumError + kd * rateError;
+
+  lastError = error;
+  previousTime = currentTime;
+
 
   Serial.print("PWM OUTPUT: ");
   Serial.println(PWM_out);
 
-  //sign of PWM_out indicates directionality
+  //print values to plot
+  Serial.print(timeFromStart);
+  Serial.print(", ");
+  Serial.println(error);
+
   if(PWM_out<0) {
     digitalWrite(dirnPin, 0); 
-    analogWrite(MotorPin, abs(PWM_out));  
+    PWM_out = abs(PWM_out);
+    PWM_out = constrain(PWM_out,26, 229);
+    //Serial.print("Writing PWM duty cycle: ");
+    //Serial.println(PWM_out);
+    analogWrite(MotorPin, PWM_out);  
   }
   else {
     digitalWrite(dirnPin, 1); 
-    analogWrite(MotorPin, abs(PWM_out)); 
+    PWM_out = constrain(PWM_out,26, 229);
+    //Serial.print("Writing PWM duty cycle: ");
+    //Serial.println(PWM_out);
+    analogWrite(MotorPin, PWM_out); 
   }
-
-  
-  //delay(100);
+  delay(5);
 }
 /*
  * Here, we are feeding it a series of inputs which are used to tune the controller

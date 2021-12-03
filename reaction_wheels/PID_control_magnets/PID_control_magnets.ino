@@ -1,6 +1,10 @@
 //#include <PID_v1.h>
 #include "Adafruit_MLX90393.h"
 #include <math.h>
+#include <SoftwareSerial.h>
+
+//set up for bluetooth shield
+SoftwareSerial bt(2,3); // RX, TX
 
 //sensor setup
 Adafruit_MLX90393 sensor = Adafruit_MLX90393();
@@ -8,8 +12,8 @@ Adafruit_MLX90393 sensor = Adafruit_MLX90393();
 
 //control pins
 int enablePin = 8;
-int MotorPin = 7;
-int dirnPin = 6;
+int MotorPin = 11;
+int dirnPin = 10;
 
 //control parameters
 double Setpoint = 0; //want to maintain angle of incidence of 0deg
@@ -19,23 +23,24 @@ double angle;
 //PID gains
 double kp = 0.75;
 double ki = 0.002;
+double ki = 0.005;
 double kd = 10;
 double cumError, rateError;
 double lastError;
 unsigned long currentTime, previousTime;
 double elapsedTime;
 double error;
+double timeFromStart;
 
 //for control with magnet
 float gamma = 0.0;  // offset of normal from the y direction (depends on orientation of magnetometer in chassis)
 float Bx, By, Bz;
 float magnetAngle = 0;  // Angle towards earth
 
-   
-//Specify the links and initial tuning parameters
-//PID myPID(&angle, &PWM_out, &Setpoint, kp, ki, kd, DIRECT);
+  
 
 void setup() {
+  bt.begin(9600);
   Serial.begin(9600);
   //set up pins
   pinMode(enablePin, OUTPUT);
@@ -43,17 +48,7 @@ void setup() {
   pinMode(dirnPin, OUTPUT);
   digitalWrite(enablePin,1);
 
-  //turn the PID on
-  //myPID.SetMode(AUTOMATIC);
   
-
-  /* Wait for serial on USB platforms. */
-  /*
-  while (!Serial) {
-      delay(10);
-  }
-  */
-
   
   //set up magntometer for I2C
   if (! sensor.begin_I2C()) {          // hardware I2C mode, can pass in address & alt Wire
@@ -118,7 +113,7 @@ void loop() {
 
   error = angle - Setpoint;
   cumError += (error * elapsedTime) / 1000;
-  Serial.println(cumError);
+  //Serial.println(cumError);
   
   rateError = (error - lastError) / elapsedTime;
 
@@ -126,7 +121,13 @@ void loop() {
 
   lastError = error;
   previousTime = currentTime;
+  timeFromStart += elapsedTime;
 
+  //print values to plot
+  bt.print(timeFromStart);
+  bt.print(", ");
+  bt.println(error);
+  //Serial.println(timeFromStart);
 
   //sign of PWM_out indicates directionality
   if(PWM_out<0) {
