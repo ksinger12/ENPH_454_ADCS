@@ -135,66 +135,71 @@ double LightVectorDetermination::_read_photodiode(int photo_pin){
   return reading_avg; 
 }
 
-void LightVectorDetermination::read_photodiode_array_even_time(double * voltages) {
-  read_photodiode_array_even_time(voltages, n_photodiode, photo_pin_offset);
-}
-
-// This method should possibly be renamed for clarity
-void LightVectorDetermination::read_photodiode_array_even_time(double * voltages, int n, int offset) {
-    /*This function is need to ensure that samples for each photodiode occur at the same time */
-
-    // Allocate arrays for average readings and set them all to zero
-    double* reading_avg = (double*)malloc(n * sizeof(double));
-    memset(reading_avg, 0, n);
-
-    for(int sample = 0; sample < n_avg; sample++) {
-        for (int pd = 0; pd < n; pd++) {
-            int photo_pin = pd + offset;
-            reading_avg[pd] += (double) analogRead(photo_pin) / n_avg;
-        }
-    }
-
-    for (int pd = 0; pd < n; pd++) {
-        voltages[pd] = reading_avg[pd];
-    }
-
-    free(reading_avg);
-}
-
-void LightVectorDetermination::auto_calibrate(double ** voltages) {
-    double resolution = TWO_PI / n_readings;                                        // In radians
-    double angular_velocity = get_z_gryo();                                         // In radians/second
-    unsigned long long dt = (unsigned long long)(resolution / angular_velocity);    // In seconds
-    // There should be a check for division by zero/low angular velocity.
-
-    unsigned long long start_time = millis();
+void LightVectorDetermination::auto_calibrate() {
+	double cal_voltages[n_photodiode][n_readings]; 
+	for(int ds=0; ds<n_readings; ds++) {
+		for(int pd=0; pd<n_photodiode; pd++) {
+			cal_voltages[pd][ds]= 0.0; 
+		}
+	}
+	
+    double resolution = TWO_PI / n_readings;                                        			// In radians
+    double angular_velocity = get_z_gryo();                                         			// In radians/second
+    unsigned long long dt = (unsigned long long)(1000*resolution / angular_velocity);    		// In seconds
+	// There should be a check for division by zero/low angular velocity.
+	
+	Serial.println("CALIBRATING...");
+	Serial.print("Angular Velocity: ");
+	Serial.print(angular_velocity); 
+	Serial.println(" radians/second");
+	
+	Serial.print("Angular Resolution: "); 
+	Serial.print(resolution); 
+	Serial.println(" radians"); 
+	
+	Serial.print("Time step: "); 
+	Serial.print((long)dt); 
+	Serial.println(" milliseconds");
+	
+    unsigned long long start_time;
     unsigned long long end_time;
     unsigned long long code_time;
-    for(int i=0; i<n_readings; i++) {
-        read_photodiode_array_even_time(voltages[i]);
-        end_time = millis();
-        code_time = end_time-start_time;
+    for(int i=0; i<n_readings; i++) {	
 
+		// Get start time
+		start_time = millis();
+
+		// Loop through taking samples. 
+		for(int sample = 0; sample < (int)n_avg; sample++) {
+			for (int pd = 0; pd < n_photodiode; pd++) {
+				//double* pd_voltage = (double*)voltages + pd*n_readings;
+				int photo_pin = pd + photo_pin_offset;
+				//pd_voltage[i] += (double)analogRead(photo_pin) / (double)n_avg;
+				cal_voltages[pd][i] += (double)analogRead(photo_pin) / (double)n_avg;
+			}
+		}
+		
+		// Find code time 
+        end_time = millis();
+        code_time = (unsigned long long)((long)end_time-(long)start_time);	
+		
         // Check if satellite is spinning too fast
         if(code_time>dt) {
             Serial.println("Satellite is spinning too fast to gather samples");
-            Serial.print("Code Time");
-            Serial.println(code_time);
-            Serial.print("Time spacing: ");
-            Serial.println(dt);
+			return; 
         }
-
-        delay(dt-code_time);
-        start_time = millis();
+		
+		// Find required delay
+		delay((long)dt-(long)code_time);
     }
+	
+	Serial.println("DONE CALIBRATION"); 
+  
+	//this->fit((double**)cal_voltages); 
 }
 
 double LightVectorDetermination::get_z_gryo() {
-  return 0;
-    MPU6050 mpu;
-    mpu.calibrateGyro();
-    mpu.setThreshold(3);
     Vector angularVelocitySatellite = mpu.readNormalizeGyro();
-    return angularVelocitySatellite.ZAxis;
+	double z_angular_velocity = abs((double)angularVelocitySatellite.ZAxis*(TWO_PI/180.0));
+    return z_angular_velocity;
 }
-

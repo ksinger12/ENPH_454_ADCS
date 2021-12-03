@@ -3,9 +3,12 @@
 
 #include "Arduino.h"
 #include "SqrtFit.h"
+#include <Wire.h>
 #include <MPU6050.h>
 
 #define TWO_PI 6.283185307179586476925286766559
+
+extern MPU6050 mpu;
 
 class LightVectorDetermination {
   public:
@@ -29,9 +32,7 @@ class LightVectorDetermination {
     void read_photodiode_array(double * voltages, int n, int offset);
     void read_photodiode_array(double ** voltages, int col);
     double _read_photodiode(int pin);
-    void read_photodiode_array_even_time(double * voltages);
-    void read_photodiode_array_even_time(double * voltages, int n, int offset);
-    void auto_calibrate(double ** voltages);
+    void auto_calibrate();
     double get_z_gryo();
 };
 
