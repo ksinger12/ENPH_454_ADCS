@@ -9,8 +9,6 @@
 #define SUN_SEEKING_MODE 1
 #define EARTH_SEEKING_MODE 2
 #define CALIBRATE_SUN_SENSOR_MODE 3
-#define SUN_ANGLE_MODE 4
-#define EARTH_ANGLE_MODE 5
 #define DE_TUMBLE_MODE 6
 
 #include <Arduino.h>
@@ -67,31 +65,35 @@ void readIRRemote() {
             case 0xB54AFF00:
                 BUFFER_ANGLE = BUFFER_ANGLE*10+9;
                 break;
+
                 // PLAY
             case 0xEA15FF00:
                 BUFFER_ANGLE = 0;
                 MODE = CALIBRATE_SUN_SENSOR_MODE;
                 break;
+
                 // BACK
             case 0xF807FF00:
-                TARGET_ANGLE = BUFFER_ANGLE;
-                MODE = SUN_ANGLE_MODE;
                 break;
+
                 // FORWARD
             case 0xF609FF00:
-                TARGET_ANGLE = BUFFER_ANGLE;
-                MODE = EARTH_ANGLE_MODE;
                 break;
+
                 // PLUS
             case 0xBF40FF00:
-                BUFFER_ANGLE = 0;
+                TARGET_ANGLE = BUFFER_ANGLE;
+                BUFFER_ANGLE= 0;
                 MODE = SUN_SEEKING_MODE;
                 break;
+
                 // MINUS
             case 0xE619FF00:
+                TARGET_ANGLE = BUFFER_ANGLE;
                 BUFFER_ANGLE = 0;
                 MODE = EARTH_SEEKING_MODE;
                 break;
+
                 // C
             case 0xF20DFF00:
                 BUFFER_ANGLE = 0;
@@ -102,10 +104,12 @@ void readIRRemote() {
                 // UNDO
             case 0xBC43FF00:
                 break;
+
                 // POWER
             case 0xBA45FF00:
                 BUFFER_ANGLE = 0;
                 MODE = IDLE_MODE;
+                bt.println("IDLE MODE.");
                 break;
                 // MENU
             case 0xB847FF00:
