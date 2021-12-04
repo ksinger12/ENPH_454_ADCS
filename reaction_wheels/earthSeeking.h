@@ -79,7 +79,7 @@ void readBdirection(){
   }
 }
 
-double getEarthAngle(){
+void getEarthAngle(){
   //get angle to earth from B field
   //stores in "angle"
   float xy_angle = atan(Bx / By) * 180 / 3.14159;
@@ -89,10 +89,9 @@ double getEarthAngle(){
   }else{
     angle = xy_angle - 90;
   }
-  return angle;
 }
 
-void updatePID(double angle){
+void updatePID(){
   currentTime = millis();
   elapsedTime = currentTime - previousTime;
 
