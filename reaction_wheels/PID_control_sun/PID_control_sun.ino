@@ -1,4 +1,3 @@
-//#include <PID_v1.h>
 #include <SqrtFit.h>
 #include <LightVectorDetermination.h>
 
@@ -51,7 +50,7 @@ void setup()
   digitalWrite(enablePin,1);
 
   //turn the PID on
-  myPID.SetMode(AUTOMATIC);
+  //myPID.SetMode(AUTOMATIC);
 
   Serial.begin(9600);
 }
