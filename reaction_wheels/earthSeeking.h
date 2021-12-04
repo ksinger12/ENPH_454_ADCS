@@ -14,10 +14,6 @@ int enablePin = 8;
 int MotorPin = 7;
 int dirnPin = 6;
 
-double Setpoint;
-double PWM_out;
-double angle;
-
 //PID control params
 //gains
 double kp = 0.75;
@@ -34,9 +30,13 @@ unsigned long currentTime, previousTime;
 double elapsedTime;
 double error;
 
+//for control with magnet
+float gamma = 0.0;  // offset of normal from the y direction (depends on orientation of magnetometer in chassis)
+float Bx, By, Bz;
+float magnetAngle = 0;  // Angle towards earth
 
 void setupEarthSeeking(double TargetAngle){
-  Serial.begin(115200);
+  //Serial.begin(115200);
 
   //target angle offset from normal
   Setpoint = TargetAngle;
@@ -48,11 +48,11 @@ void setupEarthSeeking(double TargetAngle){
   digitalWrite(enablePin,1);
 
   if (! sensor.begin_I2C()) {         
-    Serial.println("No sensor found ... check your wiring?");
+    bt.println("No sensor found ... check your wiring?");
     while (1) { delay(10); }
   }
   else{
-    Serial.println("Found a MLX90393 sensor");
+    bt.println("Found a MLX90393 sensor");
   }
 
   sensor.setGain(MLX90393_GAIN_2_5X);
@@ -71,11 +71,13 @@ void setupEarthSeeking(double TargetAngle){
 
 void readBdirection(){
   //updates Bx, By, Bz
-  try{
-    sensor.readData(&Bx, &By, &Bz);
+  if(sensor.readData(&Bx, &By, &Bz)) {
+       bt.print("X: "); bt.print(Bx, 4); bt.print(" uT\t");
+       bt.print("Y: "); bt.print(By, 4); bt.print(" uT\t");
+       bt.print("Z: "); bt.print(Bz, 4); bt.println(" uT");
   }
-  catch (const std::exception& e){
-    Serial.println("Unable to read XYZ data from the sensor.");
+  else {
+        bt.println("Unable to read XYZ data from the sensor.");
   }
 }
 
@@ -123,3 +125,5 @@ void actuateMotor(){
   }
 
 }
+
+#endif
