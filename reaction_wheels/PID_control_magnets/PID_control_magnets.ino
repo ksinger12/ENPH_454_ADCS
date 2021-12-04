@@ -23,7 +23,6 @@ double angle;
 //PID gains
 double kp = 0.75;
 double ki = 0.002;
-double ki = 0.005;
 double kd = 10;
 double cumError, rateError;
 double lastError;
@@ -100,8 +99,8 @@ void loop() {
   }else{
     magnetAngle = xy_angle - 90;
   }
-  //Serial.print("Angle of earth is: ");
-  //Serial.println(magnetAngle);
+  Serial.print("Angle of earth is: ");
+  Serial.println(magnetAngle);
 
   //actuating to this angle should make it try to orient a face towards the magnet
   angle = magnetAngle; 
