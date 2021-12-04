@@ -6,6 +6,10 @@ Includes PID code and code to actuate motors
 #ifndef PIDcontrol
 #define PIDcontrol
 
+#include <SoftwareSerial.h>
+
+extern SoftwareSerial bt;
+
 //control pins
 extern const int enablePin;
 extern const int MotorPin;
@@ -26,6 +30,7 @@ extern double cumError, lastError;
 extern unsigned long currentTime, previousTime, elapsedTime;
 extern double error;
 
+double timeFromStart;
 
 void setupPID(double target_angle){
     cumError = 0;
@@ -55,6 +60,11 @@ void updatePID(){
   //used for next iteration of controller
   lastError = error;
   previousTime = currentTime;
+
+  timeFromStart += elapsedTime;
+  bt.print(timeFromStart);
+  bt.print(", ");
+  bt.println(error);
 }
 
 void actuateMotor(){

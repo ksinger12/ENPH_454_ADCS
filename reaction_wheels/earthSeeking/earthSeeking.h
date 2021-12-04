@@ -18,9 +18,9 @@ float xy_angle; //stores angle to Earth from B field
 void readBdirection(){
   //updates Bx, By, Bz
   if(sensor.readData(&Bx, &By, &Bz)) {
-       bt.print("X: "); bt.print(Bx, 4); bt.print(" uT\t");
-       bt.print("Y: "); bt.print(By, 4); bt.print(" uT\t");
-       bt.print("Z: "); bt.print(Bz, 4); bt.println(" uT");
+       //bt.print("X: "); bt.print(Bx, 4); bt.print(" uT\t");
+       //bt.print("Y: "); bt.print(By, 4); bt.print(" uT\t");
+       //bt.print("Z: "); bt.print(Bz, 4); bt.println(" uT");
   }
   else {
         bt.println("Unable to read XYZ data from the sensor.");
