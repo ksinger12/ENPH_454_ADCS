@@ -34,6 +34,9 @@ void SqrtFit::fit(double voltages[]){
   int n_valid = 2 * angle_range * n_samples / 360;  // number of reading in [-100, 100] deg range
   float angles[n_valid];
   double valid_voltages[n_valid];  // subset of voltages in valid range
+  // Define arrays to test fit
+  float test_angles[n_valid];
+  double test_voltages[n_valid];
   
   int min_valid_v_idx = argmax_v - floor(n_valid / 2);
   int max_valid_v_idx = argmax_v + ceil((float(n_valid) / 2));
@@ -43,6 +46,8 @@ void SqrtFit::fit(double voltages[]){
     int idx = i % n_samples;
     valid_voltages[j] = sqrt(max_v - voltages[idx]);
     angles[j] = fabs(-1 * angle_range + j * 360 / n_samples);
+    test_angles[j] = angles[j];
+    test_voltages[j] = voltages[idx]
     j++;
   }
   
@@ -72,6 +77,13 @@ void SqrtFit::fit(double voltages[]){
   Serial.print(max_v);
   Serial.print(" - V ) + ");
   Serial.println(b);
+
+  // Score:
+  float mae = 0.0;
+  for (int i = 0; i < n_valid; i++)
+    mae += fabs(test_angles[i] - get_angle(test_voltages[i])) / (float)n_valid;
+  Serial.print("MAE for fit:    ");
+  Serial.println(mae);
 }
 
 void SqrtFit::set_params(double m, double b, double max_v){
@@ -80,7 +92,7 @@ void SqrtFit::set_params(double m, double b, double max_v){
   this->max_v = max_v;
 }
 
-double SqrtFit::get_angle(double voltage){
+float SqrtFit::get_angle(double voltage){
   if (voltage > max_v)
     return 0.0;
   return fabs(m * sqrt(fabs(max_v - voltage)) + b);

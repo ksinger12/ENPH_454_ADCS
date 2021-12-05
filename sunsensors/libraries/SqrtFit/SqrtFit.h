@@ -16,7 +16,7 @@ class SqrtFit {
     SqrtFit(int);
     void fit(double voltages[]);
     void set_params(double m, double b, double max_v);
-    double get_angle(double voltage);
+    float get_angle(double voltage);
 };
 
 #endif
